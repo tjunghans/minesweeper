@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Minesweeper</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      :root {
+        --size: 30px;
+      }
+
+      .board {
+        display: flex;
+        flex-wrap: wrap;
+        border: solid gray;
+        border-width: 1px 0 0 1px;
+        width: calc(9 * var(--size) + 1px);
+      }
+
+      .tile {
+        border: solid gray;
+        border-width: 0 1px 1px 0;
+        flex-grow: 0;
+        flex-shrink: 0;
+        flex-basis: var(--size);
+        width: var(--size);
+        height: var(--size);
+      }
+
+      .clicked {
+        background-color: greenyellow;
+      }
+
+      .clicked.bomb {
+        background-color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game"></div>
+
+    <script>
+      (function () {
+        "use strict";
+
+        const game = document.getElementById("game");
+        const boardSize = 9;
+        const tiles = calcTiles(boardSize);
+
+        const boardData = Array.from({ length: calcTiles(boardSize) }, () => ({
+          clicked: false,
+          bomb: false
+        }));
+
+        getBombIndexes(boardSize).forEach(index => {
+          boardData[index].bomb = true;
+        });
+      
+        renderGame(boardSize, boardData);
+
+        game.addEventListener("click", evt => {
+          if (evt.target.classList.contains("tile")) {
+            const index = evt.target.getAttribute("data-index");
+            boardData[index].clicked = true;
+            renderGame(boardSize, boardData);
+          }
+        });
+
+        function renderGame(boardSize, boardData) {
+          game.innerHTML = "";
+          game.appendChild(createBoard(boardSize, boardData));
+        }
+
+        function createBoard(boardSize, boardData) {
+          const board = elem("div");
+          board.classList.add("board");
+
+          const tiles = calcTiles(boardSize);
+          for (let i = 0; i < tiles; i++) {
+            const tile = createTile(boardSize, i, boardData[i]);
+            board.appendChild(tile);
+          }
+          return board;
+        }
+
+        function getBombIndexes(boardSize) {
+          return shuffle(
+            Object.keys(Array.from({ length: calcTiles(boardSize) }))
+          )
+            .slice(0, boardSize)
+            .map(key => Number(key))
+            .sort();
+        }
+
+        function elem(tag) {
+          return document.createElement(tag);
+        }
+
+        function calcTiles(size) {
+          return Math.pow(size, 2);
+        }
+
+        function createTile(boardSize, index, data) {
+          const tile = elem("div");
+          tile.classList.add("tile");
+          tile.setAttribute("data-index", index);
+
+          if (data.clicked) {
+            tile.classList.add("clicked"); 
+          }
+
+          if (data.bomb) {
+            tile.classList.add("bomb"); 
+          }
+
+          if (index > 0 && (index + 1) % boardSize === 0) {
+            tile.classList.add("last-col");
+          }
+
+          return tile;
+        }
+
+        function shuffle(array) {
+          var currentIndex = array.length,
+            temporaryValue,
+            randomIndex;
+
+          // While there remain elements to shuffle...
+          while (0 !== currentIndex) {
+            // Pick a remaining element...
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+
+            // And swap it with the current element.
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+          }
+
+          return array;
+        }
+      })();
+    </script>
+  </body>
+</html>
