@@ -50,15 +50,7 @@
         const boardSize = 9;
         const tiles = calcTiles(boardSize);
 
-        const boardData = Array.from({ length: calcTiles(boardSize) }, () => ({
-          clicked: false,
-          bomb: false
-        }));
-
-        getBombIndexes(boardSize).forEach(index => {
-          boardData[index].bomb = true;
-        });
-      
+        const boardData = initData(boardSize);
         renderGame(boardSize, boardData);
 
         game.addEventListener("click", evt => {
@@ -74,13 +66,29 @@
           game.appendChild(createBoard(boardSize, boardData));
         }
 
+        function initData(boardSize) {
+          const boardData = Array.from(
+            { length: calcTiles(boardSize) },
+            () => ({
+              clicked: false,
+              bomb: false
+            })
+          );
+
+          getBombIndexes(boardSize).forEach(index => {
+            boardData[index].bomb = true;
+          });
+
+          return boardData;
+        }
+
         function createBoard(boardSize, boardData) {
           const board = elem("div");
           board.classList.add("board");
 
           const tiles = calcTiles(boardSize);
           for (let i = 0; i < tiles; i++) {
-            const tile = createTile(boardSize, i, boardData[i]);
+            const tile = createTile(boardSize, boardData, i);
             board.appendChild(tile);
           }
           return board;
@@ -103,17 +111,26 @@
           return Math.pow(size, 2);
         }
 
-        function createTile(boardSize, index, data) {
+        function createTile(boardSize, boardData, index) {
           const tile = elem("div");
+          const data = boardData[index];
           tile.classList.add("tile");
           tile.setAttribute("data-index", index);
 
           if (data.clicked) {
-            tile.classList.add("clicked"); 
+            tile.classList.add("clicked");
+            if (!data.bomb) {
+              console.log(nearbyBombs(boardSize, boardData, index));
+              tile.textContent = nearbyBombs(
+                boardSize,
+                boardData,
+                index
+              ).length;
+            }
           }
 
           if (data.bomb) {
-            tile.classList.add("bomb"); 
+            tile.classList.add("bomb");
           }
 
           if (index > 0 && (index + 1) % boardSize === 0) {
@@ -123,6 +140,62 @@
           return tile;
         }
 
+        function nearbyBombs(boardSize, boardData, index) {
+          const adjacent = [];
+          if ((index - 1) % boardSize < index) {
+            if (boardData[index - 1].bomb) {
+              adjacent.push(index - 1);
+            }
+          }
+
+          if ((index + 1) % boardSize > index) {
+            if (boardData[index + 1].bomb) {
+              adjacent.push(index + 1);
+            }
+          }
+
+          const prevRowIndex = index - boardSize;
+          if (prevRowIndex > 0) {
+            if (boardData[prevRowIndex].bomb) {
+              adjacent.push(prevRowIndex);
+            }
+
+            if ((prevRowIndex - 1) % boardSize < prevRowIndex) {
+              if (boardData[prevRowIndex - 1].bomb) {
+                adjacent.push(prevRowIndex - 1);
+              }
+            }
+
+            if ((prevRowIndex + 1) % boardSize > prevRowIndex) {
+              if (boardData[prevRowIndex + 1].bomb) {
+                adjacent.push(prevRowIndex + 1);
+              }
+            }
+          }
+
+          const nextRowIndex = index + boardSize;
+          if (nextRowIndex < calcTiles(boardSize)) {
+            if (boardData[nextRowIndex].bomb) {
+              adjacent.push(nextRowIndex);
+            }
+
+            if ((nextRowIndex - 1) % boardSize < nextRowIndex) {
+              if (boardData[nextRowIndex - 1].bomb) {
+                adjacent.push(nextRowIndex - 1);
+              }
+            }
+
+            if ((nextRowIndex + 1) % boardSize > nextRowIndex) {
+              if (boardData[nextRowIndex + 1].bomb) {
+                adjacent.push(nextRowIndex + 1);
+              }
+            }
+          }
+
+          return adjacent;
+        }
+
+        // Source: https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
         function shuffle(array) {
           var currentIndex = array.length,
             temporaryValue,
