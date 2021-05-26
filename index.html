@@ -26,6 +26,8 @@
         flex-grow: 0;
         flex-shrink: 0;
         flex-basis: var(--size);
+        line-height: var(--size);
+        text-align: center;
         width: var(--size);
         height: var(--size);
       }
@@ -115,6 +117,7 @@
           const tile = elem("div");
           const data = boardData[index];
           tile.classList.add("tile");
+          tile.setAttribute("title", index);
           tile.setAttribute("data-index", index);
 
           if (data.clicked) {
@@ -142,31 +145,35 @@
 
         function nearbyBombs(boardSize, boardData, index) {
           const adjacent = [];
-          if ((index - 1) % boardSize < index) {
+
+          if (index !== 0 && (index - 1) % boardSize < index % boardSize) {
             if (boardData[index - 1].bomb) {
               adjacent.push(index - 1);
             }
           }
 
-          if ((index + 1) % boardSize > index) {
+          if ((index + 1) !== calcTiles(boardSize) && (index + 1) % boardSize > index % boardSize) {
             if (boardData[index + 1].bomb) {
               adjacent.push(index + 1);
             }
           }
 
           const prevRowIndex = index - boardSize;
-          if (prevRowIndex > 0) {
+          if (prevRowIndex >= 0) {
             if (boardData[prevRowIndex].bomb) {
               adjacent.push(prevRowIndex);
             }
 
-            if ((prevRowIndex - 1) % boardSize < prevRowIndex) {
+            if (
+              prevRowIndex > 0 &&
+              (prevRowIndex - 1) % boardSize < prevRowIndex % boardSize
+            ) {
               if (boardData[prevRowIndex - 1].bomb) {
                 adjacent.push(prevRowIndex - 1);
               }
             }
 
-            if ((prevRowIndex + 1) % boardSize > prevRowIndex) {
+            if ((prevRowIndex + 1) % boardSize > prevRowIndex % boardSize) {
               if (boardData[prevRowIndex + 1].bomb) {
                 adjacent.push(prevRowIndex + 1);
               }
@@ -179,13 +186,16 @@
               adjacent.push(nextRowIndex);
             }
 
-            if ((nextRowIndex - 1) % boardSize < nextRowIndex) {
+            if ((nextRowIndex - 1) % boardSize < nextRowIndex % boardSize) {
               if (boardData[nextRowIndex - 1].bomb) {
                 adjacent.push(nextRowIndex - 1);
               }
             }
 
-            if ((nextRowIndex + 1) % boardSize > nextRowIndex) {
+            if (
+              nextRowIndex < calcTiles(boardSize) - 1 &&
+              (nextRowIndex + 1) % boardSize > nextRowIndex % boardSize
+            ) {
               if (boardData[nextRowIndex + 1].bomb) {
                 adjacent.push(nextRowIndex + 1);
               }
